@@ -1,3 +1,4 @@
+// Permite configurar serviços e o servidor da aplicação
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
