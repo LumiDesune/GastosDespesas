@@ -1,3 +1,4 @@
+using GastosDespesas.API.DTOs;
 using GastosDespesas.API.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -66,19 +67,32 @@ public class DespesasController : ControllerBase {
 
     // Cadastro de despesa
     [HttpPost]
-    public IActionResult PostDespesa([FromBody] Despesa despesa){
-        int novoId = _despesas.Max(d => d.Id) + 1;
-
-        despesa.Id = novoId;
+    public IActionResult PostDespesa([FromBody] CriarDespesaDto dto){
 
         // Se assumir o valor padrão, ele dará Bad Request
-        if (despesa.DataVencimento == default) {
+        if (dto.DataVencimento == default) {
             return BadRequest("A data de vencimento é obrigatória");
         }
 
-        if (despesa.Valor <= 0) {
+        if (dto.DataVencimento < DateOnly.FromDateTime(DateTime.Today)){
+            return BadRequest("Não possível cadastrar uma despesa com data anterior!");
+        }
+
+        if (dto.Valor <= 0) {
             return BadRequest("Ocorreu um erro! Defina um valor acima de 0!");
         }
+
+        if (string.IsNullOrWhiteSpace(dto.Descricao)) {
+            return BadRequest("Defina uma descrição para a despesa!");
+        }
+
+        var despesa = new Despesa {
+            Id = _despesas.Max(d => d.Id) + 1,
+            Descricao = dto.Descricao,
+            Valor = dto.Valor,
+            DataVencimento = dto.DataVencimento,
+            DataPagamento = dto.DataPagamento
+        };
 
         _despesas.Add(despesa);
 
@@ -89,6 +103,57 @@ public class DespesasController : ControllerBase {
             },
             despesa
         );
+    }
+
+    // Atualizando despesas por completo
+    [HttpPut("{id}")]
+    public IActionResult PutDespesa(int id, [FromBody] CriarDespesaDto dto){
+
+        var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+
+        if (despesa is null){
+            return NotFound();
+        }
+
+        if (dto.DataVencimento == default) {
+            return BadRequest("A data de vencimento é obrigatória");
+        }
+
+        if (dto.DataVencimento < DateOnly.FromDateTime(DateTime.Today)){
+            return BadRequest("Não possível cadastrar uma despesa com data anterior!");
+        }
+
+        if (dto.Valor <= 0) {
+            return BadRequest("Ocorreu um erro! Defina um valor acima de 0!");
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Descricao)) {
+            return BadRequest("Defina uma descrição para a despesa!");
+        }
+
+        despesa.Descricao = dto.Descricao;
+        despesa.Valor = dto.Valor;
+        despesa.DataVencimento = dto.DataVencimento;
+        despesa.DataPagamento = dto.DataPagamento;
+
+        return Ok(despesa);
+
+    }
+
+    // Atualizando somente o valor da despesa
+    [HttpPatch("{id}/valor")]
+    public IActionResult AtualizaValorDespesa(int id, [FromBody] AtualizaValorDespesaDto dto){
+
+        var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+
+        if (despesa is null){
+            return NotFound();
+        }
+
+        despesa.Valor = dto.Valor;
+
+        return Ok(despesa);
+
     }
 
 }
