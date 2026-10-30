@@ -11,4 +11,6 @@ public class CriarDespesaDto {
     [Required]
     public DateOnly DataVencimento {get; set;}
     public DateOnly? DataPagamento {get; set;}
+    [Required(ErrorMessage = "Obrigatório definir o ID da pessoa para a despesa!")]
+    public int PessoaId {get; set;}
 }

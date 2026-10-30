@@ -483,3 +483,4 @@ $RECYCLE.BIN/
 
 # Environment configuration files
 appsettings.Development.json
+.vscode

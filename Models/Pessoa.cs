@@ -1,8 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace GastosDespesas.API.Models;
 
 public class Pessoa {
+    [Key]
     public int Id {get; set;}
     public string Nome {get; set;} = string.Empty;
-    public string? Email {get; set;}
-    public DateOnly DataNascimento {get; set;}
+    public DateOnly? DataNascimento {get; set;}
+    public ICollection<Despesa> Despesas {get; set;} = new List<Despesa>();
 }

@@ -1,6 +1,8 @@
+using GastosDespesas.API.Data;
 using GastosDespesas.API.DTOs;
 using GastosDespesas.API.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GastosDespesas.API.Controllers;
 
@@ -8,45 +10,19 @@ namespace GastosDespesas.API.Controllers;
 [Route("api/despesas")] // Define a rota da API
 public class DespesasController : ControllerBase {
 
-    private static readonly List<Despesa> _despesas = new() {
+    private readonly AppDbContext _context;
 
-        new Despesa {
-                Id = 1,
-                Descricao = "Conta de energia",
-                Valor = 524.50m,
-                DataVencimento = new DateOnly(2026, 12, 24),
-                DataPagamento = null
-            },
-
-            new Despesa {
-                Id = 2,
-                Descricao = "Conta de água",
-                Valor = 120m,
-                DataVencimento = new DateOnly(2026, 11, 12),
-                DataPagamento = new DateOnly(2026, 10, 26)
-            },
-
-            new Despesa {
-                Id = 3,
-                Descricao = "Café com leite",
-                Valor = 15m,
-                DataVencimento = new DateOnly(2026, 11, 09),
-                DataPagamento = new DateOnly(2026, 10, 23)
-            }
-
-    };
+    public DespesasController(AppDbContext context){
+        _context = context;
+    }
 
 
     [HttpGet] // Método HTTP para a rota
-    public IActionResult GetResult() {
-        
-        return Ok(_despesas);
+    public async Task<IActionResult> GetResult(){
+        var despesas = await _context.Despesas.ToListAsync();
 
-    }
+        return Ok(despesas);
 
-    [HttpGet("resume")] // Define uma nova rota
-    public IActionResult GetResume() {
-        return Ok("Resumo das despesas");
     }
 
     /// Busca por id da despesa
@@ -55,7 +31,7 @@ public class DespesasController : ControllerBase {
     public IActionResult GetResultId(int id) {
 
 
-        var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+        var despesa = _context.Despesas.FirstOrDefault(d => d.Id == id);
 
         if (despesa is null) {
             return NotFound("Despesa não encontrada!");
@@ -67,34 +43,29 @@ public class DespesasController : ControllerBase {
 
     // Cadastro de despesa
     [HttpPost]
-    public IActionResult PostDespesa([FromBody] CriarDespesaDto dto){
+    public async Task<IActionResult> PostDespesa([FromBody] CriarDespesaDto dto){
 
-        // Se assumir o valor padrão, ele dará Bad Request
-        if (dto.DataVencimento == default) {
-            return BadRequest("A data de vencimento é obrigatória");
-        }
+        var pessoaExiste = await _context.Pessoas.AnyAsync(p => p.Id == dto.PessoaId);
 
-        if (dto.DataVencimento < DateOnly.FromDateTime(DateTime.Today)){
-            return BadRequest("Não possível cadastrar uma despesa com data anterior!");
-        }
-
-        if (dto.Valor <= 0) {
-            return BadRequest("Ocorreu um erro! Defina um valor acima de 0!");
-        }
-
-        if (string.IsNullOrWhiteSpace(dto.Descricao)) {
-            return BadRequest("Defina uma descrição para a despesa!");
+        if (!pessoaExiste){
+            return NotFound("Não foi encontrada a pessoa especifica!");
         }
 
         var despesa = new Despesa {
-            Id = _despesas.Max(d => d.Id) + 1,
             Descricao = dto.Descricao,
             Valor = dto.Valor,
             DataVencimento = dto.DataVencimento,
-            DataPagamento = dto.DataPagamento
+            DataPagamento = dto.DataPagamento,
+            PessoaId = dto.PessoaId
         };
 
-        _despesas.Add(despesa);
+        if (dto.DataPagamento > DateOnly.FromDateTime(DateTime.Today)){
+            return BadRequest("Não é possível definir uma data de pagamento posterior");
+        }
+
+        _context.Despesas.Add(despesa);
+
+        await _context.SaveChangesAsync();
 
         return CreatedAtAction(
             nameof(GetResultId),
@@ -103,17 +74,18 @@ public class DespesasController : ControllerBase {
             },
             despesa
         );
+      
     }
 
     // Atualizando despesas por completo
     [HttpPut("{id}")]
     public IActionResult PutDespesa(int id, [FromBody] CriarDespesaDto dto){
 
-        var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+      //  var despesa = _despesas.FirstOrDefault(d => d.Id == id);
 
-        if (despesa is null){
-            return NotFound();
-        }
+       // if (despesa is null){
+      //      return NotFound();
+      //  }
 
         if (dto.DataVencimento == default) {
             return BadRequest("A data de vencimento é obrigatória");
@@ -131,28 +103,45 @@ public class DespesasController : ControllerBase {
             return BadRequest("Defina uma descrição para a despesa!");
         }
 
-        despesa.Descricao = dto.Descricao;
-        despesa.Valor = dto.Valor;
-        despesa.DataVencimento = dto.DataVencimento;
-        despesa.DataPagamento = dto.DataPagamento;
+       // despesa.Descricao = dto.Descricao;
+       // despesa.Valor = dto.Valor;
+       // despesa.DataVencimento = dto.DataVencimento;
+       // despesa.DataPagamento = dto.DataPagamento;
 
-        return Ok(despesa);
+        return Ok();
 
     }
+
+    [HttpDelete("{id}")]
+    // Deletando um id próprio da despesa
+    public ActionResult DeleteDespesa(int id){
+
+        //var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+
+        //if (despesa is null) {
+       //     return NotFound("Despesa não encontrada!");
+       // }
+
+       // _despesas.Remove(despesa);
+
+        return NoContent();
+
+    }
+
 
     // Atualizando somente o valor da despesa
     [HttpPatch("{id}/valor")]
     public IActionResult AtualizaValorDespesa(int id, [FromBody] AtualizaValorDespesaDto dto){
 
-        var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+        //var despesa = _despesas.FirstOrDefault(d => d.Id == id);
 
-        if (despesa is null){
+        //if (despesa is null){
             return NotFound();
-        }
+       // }
 
-        despesa.Valor = dto.Valor;
+       // despesa.Valor = dto.Valor;
 
-        return Ok(despesa);
+       // return Ok();
 
     }
 
