@@ -19,7 +19,24 @@ public class PessoasController : ControllerBase {
     [HttpGet]
     public async Task<IActionResult> GetResult(){
 
-        var pessoas = await _context.Pessoas.ToListAsync();
+        //var pessoas = await _context.Pessoas.Include(p => p.Despesas).ToListAsync();
+        var pessoas = await _context.Pessoas
+        .Select(p => new {
+            p.Id,
+            p.Nome,
+            p.DataNascimento,
+
+            Despesas = p.Despesas.Select(d => new {
+                d.Id,
+                d.Descricao,
+                d.Valor,
+                d.DataVencimento,
+                d.DataPagamento
+            })
+        })
+        .ToListAsync();
+
+
         return Ok(pessoas);
 
     }

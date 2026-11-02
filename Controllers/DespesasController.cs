@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using GastosDespesas.API.Data;
 using GastosDespesas.API.DTOs;
 using GastosDespesas.API.Models;
@@ -69,7 +68,8 @@ public class DespesasController : ControllerBase {
             Valor = dto.Valor,
             DataVencimento = dto.DataVencimento,
             DataPagamento = dto.DataPagamento,
-            PessoaId = dto.PessoaId
+            PessoaId = dto.PessoaId,
+            CategoriaId = dto.CategoriaId
         };
 
         if (dto.DataPagamento > DateOnly.FromDateTime(DateTime.Today)){
