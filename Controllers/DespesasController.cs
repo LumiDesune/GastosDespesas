@@ -19,7 +19,25 @@ public class DespesasController : ControllerBase {
 
     [HttpGet] // Método HTTP para a rota
     public async Task<IActionResult> GetResult(){
-        var despesas = await _context.Despesas.ToListAsync();
+        var despesas = await _context.Despesas
+        .Select(d => new {
+            d.Id,
+            d.Descricao,
+            d.Valor,
+            d.DataVencimento,
+            d.DataPagamento,
+
+            Pessoa = new {
+                d.Pessoa.Id,
+                d.Pessoa.Nome
+            },
+
+            Categoria = new {
+                d.Categoria.Id,
+                d.Categoria.Nome
+            }
+        })
+        .ToListAsync();
 
         return Ok(despesas);
 
