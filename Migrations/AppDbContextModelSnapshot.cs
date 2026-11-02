@@ -22,6 +22,23 @@ namespace GastosDespesas.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("GastosDespesas.API.Models.Categoria", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categorias");
+                });
+
             modelBuilder.Entity("GastosDespesas.API.Models.Despesa", b =>
                 {
                     b.Property<int>("Id")
@@ -29,6 +46,9 @@ namespace GastosDespesas.API.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoriaId")
+                        .HasColumnType("int");
 
                     b.Property<DateOnly?>("DataPagamento")
                         .HasColumnType("date");
@@ -48,6 +68,8 @@ namespace GastosDespesas.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoriaId");
+
                     b.HasIndex("PessoaId");
 
                     b.ToTable("Despesas");
@@ -66,8 +88,7 @@ namespace GastosDespesas.API.Migrations
 
                     b.Property<string>("Nome")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -76,13 +97,26 @@ namespace GastosDespesas.API.Migrations
 
             modelBuilder.Entity("GastosDespesas.API.Models.Despesa", b =>
                 {
+                    b.HasOne("GastosDespesas.API.Models.Categoria", "Categoria")
+                        .WithMany("Despesas")
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("GastosDespesas.API.Models.Pessoa", "Pessoa")
                         .WithMany("Despesas")
                         .HasForeignKey("PessoaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Categoria");
+
                     b.Navigation("Pessoa");
+                });
+
+            modelBuilder.Entity("GastosDespesas.API.Models.Categoria", b =>
+                {
+                    b.Navigation("Despesas");
                 });
 
             modelBuilder.Entity("GastosDespesas.API.Models.Pessoa", b =>

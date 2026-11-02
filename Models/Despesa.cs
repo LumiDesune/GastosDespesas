@@ -9,4 +9,7 @@ public class Despesa {
     // Referenciando pessoa na despesa (chave estrangeira)
     public int PessoaId {get; set;}
     public Pessoa Pessoa {get; set;} = null!;
+    // Referenciando categoria na despesa (chave estrangeira)
+    public int CategoriaId {get; set;}
+    public Categoria Categoria {get; set;} = null!;
 }

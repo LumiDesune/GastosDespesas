@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using GastosDespesas.API.Data;
 using GastosDespesas.API.DTOs;
 using GastosDespesas.API.Models;
@@ -39,6 +40,18 @@ public class DespesasController : ControllerBase {
         
         return Ok(despesa);
 
+    }
+
+    // Busca despesas por pessoa
+    [HttpGet("pessoa/{pessoaId}")]
+    public async Task<IActionResult> GetDespesasPorPessoa(int pessoaId){
+        var despesas = await _context.Despesas.Where(d => d.PessoaId == pessoaId).ToListAsync();
+
+        if (despesas.Count == 0) {
+            return NotFound("Não foi encontrada nenhuma despesa para essa pessoa!");
+        }
+
+        return Ok(despesas);
     }
 
     // Cadastro de despesa
@@ -114,15 +127,17 @@ public class DespesasController : ControllerBase {
 
     [HttpDelete("{id}")]
     // Deletando um id próprio da despesa
-    public ActionResult DeleteDespesa(int id){
+    public async Task<ActionResult> DeleteDespesa(int id){
 
         //var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+        var despesa = await _context.Despesas.FirstOrDefaultAsync(d => d.Id == id);
 
-        //if (despesa is null) {
-       //     return NotFound("Despesa não encontrada!");
-       // }
+        if (despesa is null) {
+            return NotFound("Despesa não encontrada!");
+        }
 
-       // _despesas.Remove(despesa);
+       _context.Despesas.Remove(despesa);
+       await _context.SaveChangesAsync();
 
         return NoContent();
 
@@ -131,17 +146,18 @@ public class DespesasController : ControllerBase {
 
     // Atualizando somente o valor da despesa
     [HttpPatch("{id}/valor")]
-    public IActionResult AtualizaValorDespesa(int id, [FromBody] AtualizaValorDespesaDto dto){
+    public async Task<IActionResult> AtualizaValorDespesa(int id, [FromBody] AtualizaValorDespesaDto dto){
 
-        //var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+        var despesa = await _context.Despesas.FirstOrDefaultAsync(d => d.Id == id);
 
-        //if (despesa is null){
-            return NotFound();
-       // }
+        if (despesa is null){
+            return NotFound("Despesa não encontrada!");
+       }
 
-       // despesa.Valor = dto.Valor;
+        despesa.Valor = dto.Valor;
 
-       // return Ok();
+        await _context.SaveChangesAsync();
+        return Ok();
 
     }
 

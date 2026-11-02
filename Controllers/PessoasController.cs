@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GastosDespesas.API.Controllers;
 
 [ApiController]
-[Route("api/pessoas")]
+[Route("api/despesas/pessoas")]
 public class PessoasController : ControllerBase {
 
     private readonly AppDbContext _context;
@@ -35,6 +35,23 @@ public class PessoasController : ControllerBase {
 
         return Ok(pessoa);
 
+    }
+
+    // Total de despesas de uma pessoa
+    [HttpGet("{pessoaId}/total")]
+    public async Task<IActionResult> GetTotalDespesas(int pessoaId) {
+        var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == pessoaId);
+
+        if (pessoa is null) {
+            return NotFound("Pessoa não encontrada!");
+        }
+
+        var total = await _context.Despesas.Where(d => d.PessoaId == pessoaId).SumAsync(d => d.Valor);
+
+        return Ok(new { 
+            Pessoa = pessoa.Nome,
+            TotalDespesas = total
+        });
     }
 
     [HttpPost]
