@@ -20,24 +20,26 @@ public class DespesasController : ControllerBase {
     [HttpGet] // Método HTTP para a rota
     public async Task<IActionResult> GetResult(){
         var despesas = await _context.Despesas
-        .Select(d => new {
-            d.Id,
-            d.Descricao,
-            d.Valor,
-            d.DataVencimento,
-            d.DataPagamento,
+        .Select(d => new DespesaResponseDto {
+            Id = d.Id,
+            Descricao = d.Descricao,
+            Valor = d.Valor,
+            DataVencimento = d.DataVencimento,
+            DataPagamento = d.DataPagamento,
 
-            Pessoa = new {
-                d.Pessoa.Id,
-                d.Pessoa.Nome
+            Pessoa = new PessoaResponseDto {
+                Id = d.Pessoa.Id,
+                Nome = d.Pessoa.Nome,
+                DataNascimento = d.Pessoa.DataNascimento
             },
 
-            Categoria = new {
-                d.Categoria.Id,
-                d.Categoria.Nome
+            Categoria = new CategoriaResponseDto {
+                Id = d.Categoria.Id,
+                Nome = d.Categoria.Nome
             }
         })
         .ToListAsync();
+
 
         return Ok(despesas);
 
@@ -113,10 +115,11 @@ public class DespesasController : ControllerBase {
     public IActionResult PutDespesa(int id, [FromBody] CriarDespesaDto dto){
 
       //  var despesa = _despesas.FirstOrDefault(d => d.Id == id);
+      var despesa = _context.Despesas.FirstOrDefault(d => d.Id == id);
 
-       // if (despesa is null){
-      //      return NotFound();
-      //  }
+        if (despesa is null){
+            return NotFound();
+        }
 
         if (dto.DataVencimento == default) {
             return BadRequest("A data de vencimento é obrigatória");
